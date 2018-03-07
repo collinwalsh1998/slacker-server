@@ -18,6 +18,6 @@ app.listen(8081, function() {
     DatabaseController.connect("mongodb://localhost:27017/slacker")
         .catch(error => {
             console.log("Error connecting to database: " + error);
-			process.exit(1);
+            process.exit(1);
 		});
 });

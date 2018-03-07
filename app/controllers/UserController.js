@@ -12,7 +12,7 @@ module.exports.createUser = function(req, res) {
     let email = req.body.email;
     let password = req.body.password;
     let passwordAgain = req.body["password-again"];
-    let formValidation = validateForm(req.body);
+    let formValidation = validateForm(req.body, true);
 
     if(!formValidation.success) {
         res.status(400);
@@ -66,7 +66,58 @@ module.exports.createUser = function(req, res) {
     });
 }
 
-function validateForm(formData) {
+module.exports.login = function(req, res) {
+    let email = req.body.email;
+    let password = req.body.password;
+    let formValidation = validateForm(req.body, false);
+
+    if(!formValidation.success) {
+        res.status(400);
+        res.json(formValidation);
+        return;
+    }
+
+    //find account with email given. Remove excess rows that are not needed
+    User.findOne({ email: email }, "-_id -__v -created_at -updated_at", function(error, result) {
+        if(error) {
+            res.status(400);
+            res.json({ success: false, message: "An error occurred while logging in" });
+            return;
+        }
+
+        if(!result) {
+            res.status(400);
+            res.json({ success: false, message: "No account associated with that email" });
+            return;
+        }
+
+        //to allow the object to be modified I needed to call the toObject function
+        result = result.toObject();
+
+        bcrypt.compare(password, result.password, function(error, match) {
+            if(error) {
+                res.status(400);
+                res.json({ success: false, message: "An error occurred while logging in" });
+                return;
+            }
+
+            if(!match) {
+                res.status(400);
+                res.json({ success: false, message: "Incorrect email or password" });
+                return;
+            }
+
+            //remove the password property from object before sending back to client
+            delete result.password;
+
+            res.status(200);
+            res.json(result);
+            return;
+        });
+    });
+}
+
+function validateForm(formData, checkPasswords) {
     //check that the form fields aren't empty
     for(let i in formData) {
         if(validator.isEmpty(formData[i])) {
@@ -79,9 +130,12 @@ function validateForm(formData) {
         return { success: false, message: "Please enter a valid email address" };
     }
 
-    //check that the passwords match. I could have used a comparison operator, but for consistancy I used the validator library
-    if(!validator.equals(formData.password, formData["password-again"])) {
-        return { success: false, message: "Your passwords do not match" };
+    //if two passwords need to be validated (when creating account). Otherwise skip over this (when logging in)
+    if(checkPasswords) {
+        //check that the passwords match. I could have used a comparison operator, but for consistancy I used the validator library
+        if(!validator.equals(formData.password, formData["password-again"])) {
+            return { success: false, message: "Your passwords do not match" };
+        }
     }
 
     return { success: true };
