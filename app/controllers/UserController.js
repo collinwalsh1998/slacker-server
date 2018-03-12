@@ -27,7 +27,7 @@ module.exports.createUser = function(req, res) {
             return;
         }
 
-        var user = new User({
+        let user = new User({
 			user_id: uniqid(),
 			first_name: first_name,
 			last_name: last_name,
