@@ -7,6 +7,56 @@ let validator = require("validator");
 let Conversation = require("../models/ConversationModel");
 let User = require("../models/UserModel");
 
+module.exports.getAllConversations = function(req, res) {
+    let userId = req.params.userId;
+    
+    if(!userId) {
+        res.status(400);
+        res.json({ success: false, message: "Invalid user Id" });
+        return;
+    }
+
+    Conversation.find({ users: { $elemMatch: { user_id: userId } } }, "-_id -__v -created_at", function(error, result) {
+        if(error) {
+            res.status(400);
+            res.json({ success: false, message: "An error occurred locating the user" });
+            return;
+        }
+
+        if(!result) {
+            res.status(400);
+            res.json({ success: false, message: "No user found with that user id" });
+            return;
+        }
+
+        res.status(200);
+        res.json(result);
+        return;
+    });
+}
+
+module.exports.getNewConversations = function(req, res) {
+    let conversationId = req.params.conversationId;
+
+    Conversation.find({ conversation_id: { $gt: conversationId } }, "-_id -__v -created_at", function(error, result) {
+        if(error) {
+            res.status(400);
+            res.json({ success: false, message: "An error occurred getting new conversations" });
+            return;
+        }
+
+        if(!result) {
+            res.status(400);
+            res.json({ success: false, message: "An error occurred getting new conversations" });
+            return;
+        }
+
+        res.status(200);
+        res.json(result);
+        return;
+    });
+}
+
 module.exports.createConversation = function(req, res) {
     let emailList = req.body.emailList;
     let idList = [];
@@ -35,7 +85,7 @@ module.exports.createConversation = function(req, res) {
 
         if(!idList.length) {
             res.status(400);
-            res.json({ success: false, message: "An error occurred creating the user" });
+            res.json({ success: false, message: "An error occurred creating the conversation" });
             return;
         }
 
@@ -57,6 +107,9 @@ module.exports.createConversation = function(req, res) {
             delete conversationData._id;
             delete conversationData.__v;
             delete conversationData.created_at;
+
+            //all data returned to the frontend should be an array for consistancy
+            conversationData = [conversationData];
 
             res.status(200);
             res.json(conversationData);

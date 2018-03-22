@@ -9,4 +9,6 @@ module.exports = function(app) {
     
     //conversation routes
     app.post("/createConversation", ConversationController.createConversation);
+    app.get("/getAllConversations/:userId", ConversationController.getAllConversations);
+    app.get("/getNewConversations/:conversationId", ConversationController.getNewConversations);
 }
