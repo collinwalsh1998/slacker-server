@@ -36,9 +36,10 @@ module.exports.getAllConversations = function(req, res) {
 }
 
 module.exports.getNewConversations = function(req, res) {
+    let userId = req.params.userId;
     let conversationId = req.params.conversationId;
 
-    Conversation.find({ conversation_id: { $gt: conversationId } }, "-_id -__v -created_at", function(error, result) {
+    Conversation.find({ users: { $elemMatch: { user_id: userId } }, conversation_id: { $gt: conversationId } }, "-_id -__v -created_at", function(error, result) {
         if(error) {
             res.status(400);
             res.json({ success: false, message: "An error occurred getting new conversations" });
