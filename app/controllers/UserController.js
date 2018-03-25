@@ -57,7 +57,10 @@ module.exports.createUser = function(req, res) {
 			delete userData.__v;
 			delete userData.password;
 			delete userData.created_at;
-			delete userData.updated_at;
+            delete userData.updated_at;
+            
+            //all data returned to the frontend should be an array for consistancy
+            userData = [userData];
 
             res.status(200);
             res.json(userData);
@@ -109,6 +112,9 @@ module.exports.login = function(req, res) {
 
             //remove the password property from object before sending back to client
             delete result.password;
+            
+            //all data returned to the frontend should be an array for consistancy
+            result = [result];            
 
             res.status(200);
             res.json(result);
