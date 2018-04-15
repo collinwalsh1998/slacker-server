@@ -1,6 +1,7 @@
 //controllers
 let UserController = require("../controllers/UserController");
 let ConversationController = require("../controllers/ConversationController");
+let MessageController = require("../controllers/MessageController");
 
 module.exports = function(app) {
     //authorization routes
@@ -11,4 +12,7 @@ module.exports = function(app) {
     app.post("/createConversation", ConversationController.createConversation);
     app.get("/getAllConversations/:userId", ConversationController.getAllConversations);
     app.get("/getNewConversations/:userId/:conversationId", ConversationController.getNewConversations);
+
+    //message routes
+    app.post("/sendMessage", MessageController.sendMessage);
 }
