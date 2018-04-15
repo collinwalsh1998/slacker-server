@@ -60,7 +60,7 @@ module.exports.getNewConversations = function(req, res) {
 
 module.exports.createConversation = function(req, res) {
     let emailList = req.body.emailList;
-    let idList = [];
+    let userList = [];
     let formValidation = validateForm(emailList);
 
     if(!formValidation.success) {
@@ -78,43 +78,61 @@ module.exports.createConversation = function(req, res) {
 
         //push user data for new conversation into array
         for(let i in result) {
-            idList.push({
+            userList.push({
                 email: result[i].email,
                 user_id: result[i].user_id
             });
         }
 
-        if(!idList.length) {
+        if(!userList.length) {
             res.status(400);
             res.json({ success: false, message: "An error occurred creating the conversation" });
             return;
         }
 
-        let conversation = new Conversation({
-            conversation_id: uniqid(),
-            users: idList,
-            created_at: new Date(),
-            updated_at: new Date()
-        });
+        //sort the list of users
+        userList = userList.sort(sortEmailList);
 
-        conversation.save(function(error) {
+        //check that the list of users isn't already in a conversation (conversation already exists)
+        Conversation.find({ users: userList }, function(error, result) {
             if(error) {
                 res.status(400);
                 res.json({ success: false, message: "An error occurred creating the conversation" });
                 return;
             }
 
-            let conversationData = conversation.toObject();
-            delete conversationData._id;
-            delete conversationData.__v;
-            delete conversationData.created_at;
-
-            //all data returned to the frontend should be an array for consistancy
-            conversationData = [conversationData];
-
-            res.status(200);
-            res.json(conversationData);
-            return;
+            if(result.length) {
+                res.status(400);
+                res.json({ success: false, message: "That conversation already exists" });
+                return;
+            }
+        
+            let conversation = new Conversation({
+                conversation_id: uniqid(),
+                users: userList,
+                created_at: new Date(),
+                updated_at: new Date()
+            });
+    
+            conversation.save(function(error) {
+                if(error) {
+                    res.status(400);
+                    res.json({ success: false, message: "An error occurred creating the conversation" });
+                    return;
+                }
+    
+                let conversationData = conversation.toObject();
+                delete conversationData._id;
+                delete conversationData.__v;
+                delete conversationData.created_at;
+    
+                //all data returned to the frontend should be an array for consistancy
+                conversationData = [conversationData];
+    
+                res.status(200);
+                res.json(conversationData);
+                return;
+            });
         });
     });
 }
@@ -133,4 +151,10 @@ function validateForm(formData) {
     }
 
     return { success: true };
+}
+
+function sortEmailList(a, b) {
+    if(a.email < b.email) return -1;
+    if(a.email > b.email) return 1;
+    return 0;
 }
