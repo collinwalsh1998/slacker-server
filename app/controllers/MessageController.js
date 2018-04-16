@@ -51,3 +51,26 @@ module.exports.sendMessage = function(req, res) {
         });
     });
 }
+
+module.exports.getAllMessages = function(req, res) {
+    let threadId = req.params.threadId;
+
+    if(!threadId) {
+        res.status(400);
+        res.json({ success: false, message: "Invalid thread Id" });
+        return;
+    }
+
+    let messageModel = mongoose.model(threadId, Message);
+    messageModel.find({}, "-_id -__v", function(error, result) {
+        if(error) {
+            res.status(400);
+            res.json({ success: false, message: "An error occurred getting the messages" });
+            return;
+        }
+
+        res.status(200);
+        res.json(result);
+        return;
+    });
+}

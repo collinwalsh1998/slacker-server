@@ -15,4 +15,5 @@ module.exports = function(app) {
 
     //message routes
     app.post("/sendMessage", MessageController.sendMessage);
+    app.get("/getAllMessages/:threadId", MessageController.getAllMessages);
 }
