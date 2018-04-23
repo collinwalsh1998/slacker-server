@@ -74,3 +74,27 @@ module.exports.getAllMessages = function(req, res) {
         return;
     });
 }
+
+module.exports.getNewMessages = function(req, res) {
+    let threadId = req.params.threadId;
+    let messageId = req.params.messageId;
+
+    let messageModel = mongoose.model(threadId, Message);
+    messageModel.find({ message_id: { $gt: messageId } }, "-_id -__v -updated_at", function(error, result) {
+        if(error) {
+            res.status(400);
+            res.json({ success: false, message: "An error occurred getting new messages" });
+            return;
+        }
+
+        if(!result) {
+            res.status(400);
+            res.json({ success: false, message: "An error occurred getting new messages" });
+            return;
+        }
+
+        res.status(200);
+        res.json(result);
+        return;
+    });
+}
